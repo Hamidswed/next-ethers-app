@@ -1,6 +1,6 @@
 "use client";
 import { ethers } from "ethers";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import abi from "../json/abi.json";
 import Button from "./common/Button";
 import NetworkInfo from "./common/NetworkInfo";
@@ -119,7 +119,7 @@ const DApp: React.FC = () => {
     }
   };
 
-  const connectWallet = async () => {
+  const connectWallet = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -174,13 +174,13 @@ const DApp: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isClient) {
       connectWallet();
     }
-  }, [isClient]);
+  }, [connectWallet, isClient]);
 
   if (!isClient) {
     return (
