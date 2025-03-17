@@ -40,6 +40,7 @@ const DApp: React.FC = () => {
   const [signature, setSignature] = useState<string>("");
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [walletBalance, setWalletBalance] = useState<string>("");
+  const [walletAddress, setWalletAddress] = useState<string>("");
 
   useEffect(() => {
     setIsClient(true);
@@ -50,6 +51,7 @@ const DApp: React.FC = () => {
     setNetwork("");
     setSignature("");
     setWalletBalance("");
+    setWalletAddress("");
     setIsConnected(false);
   };
 
@@ -130,6 +132,7 @@ const DApp: React.FC = () => {
       const provider = new ethers.BrowserProvider(windowWithEthereum.ethereum);
       const signer = await provider.getSigner();
       const address = await signer.getAddress();
+      setWalletAddress(address);
 
       const networkInfo = await provider.getNetwork();
       setNetwork(networkInfo.name);
@@ -177,7 +180,7 @@ const DApp: React.FC = () => {
 
   if (!isClient) {
     return (
-      <div className="p-4 sm:p-6 w-full max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
+      <div className="p-4 sm:p-6 w-full max-w-lg mx-auto bg-white rounded-xl shadow-md space-y-4">
         <div className="flex items-center justify-center p-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
@@ -186,7 +189,7 @@ const DApp: React.FC = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 w-full max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
+    <div className="p-4 sm:p-6 w-full max-w-lg mx-auto bg-white rounded-xl shadow-md space-y-4">
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
         <h1 className="text-lg sm:text-xl font-bold text-gray-800 text-center sm:text-left">
           Smart Contract Details
@@ -210,7 +213,7 @@ const DApp: React.FC = () => {
       {isConnected && (
         <div className="space-y-4">
           <NetworkInfo network={network} onSwitchNetwork={switchNetwork} />
-          <WalletBalance balance={walletBalance} />
+          <WalletBalance balance={walletBalance} address={walletAddress} />
 
           {error ? (
             <div className="p-3 sm:p-4 bg-red-50 rounded-lg">
