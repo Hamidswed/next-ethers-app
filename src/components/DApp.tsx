@@ -17,7 +17,11 @@ interface WindowWithEthereum extends Window {
   ethereum?: ethers.Eip1193Provider;
 }
 
-const CONTRACT_ADDRESS = "0x7FFB3d637014488b63fb9858E279385685AFc1e2";
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+
+if (!CONTRACT_ADDRESS) {
+  throw new Error("Contract address is not defined in environment variables");
+}
 
 const POLYGON_MAINNET = {
   chainId: "0x89",
