@@ -34,10 +34,18 @@ const DApp: React.FC = () => {
   const [network, setNetwork] = useState<string>("");
   const [isClient, setIsClient] = useState<boolean>(false);
   const [signature, setSignature] = useState<string>("");
+  const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const disconnectWallet = () => {
+    setDetails(null);
+    setNetwork("");
+    setSignature("");
+    setIsConnected(false);
+  };
 
   const addPolygonNetwork = async () => {
     try {
@@ -133,6 +141,7 @@ const DApp: React.FC = () => {
         symbol,
         balance: ethers.formatEther(balance), // Convert balance to ETH
       });
+      setIsConnected(true);
     } catch (err) {
       console.error("Error connecting to wallet:", err);
       setError(
@@ -161,70 +170,107 @@ const DApp: React.FC = () => {
 
   return (
     <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
-      <h1 className="text-xl font-bold text-gray-800">
-        Smart Contract Details
-      </h1>
-
-      <div className="p-2 bg-blue-50 rounded">
-        <p className="text-sm text-blue-600">
-          Current Network: <span className="font-medium">{network}</span>
-        </p>
-        <div className="mt-2 space-x-2">
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-bold text-gray-800">
+          Smart Contract Details
+        </h1>
+        {isConnected ? (
           <button
-            onClick={() => switchNetwork("0x89")}
-            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+            onClick={disconnectWallet}
+            className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
           >
-            Polygon Mainnet
+            Disconnect
           </button>
+        ) : (
           <button
-            onClick={() => switchNetwork("0x13881")}
-            className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+            onClick={connectWallet}
+            className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
           >
-            Polygon Mumbai
+            Connect Wallet
           </button>
-        </div>
+        )}
       </div>
 
-      {error ? (
-        <div className="p-4 bg-red-50 rounded-lg">
-          <p className="text-red-600">{error}</p>
-        </div>
-      ) : isLoading ? (
-        <div className="flex items-center justify-center p-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-      ) : details ? (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-              <span className="text-gray-600">Name:</span>
-              <span className="font-medium">{details.name}</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-              <span className="text-gray-600">Symbol:</span>
-              <span className="font-medium">{details.symbol}</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-              <span className="text-gray-600">Balance:</span>
-              <span className="font-medium">{details.balance} MATIC</span>
+      {isConnected && (
+        <>
+          <div className="p-2 bg-blue-50 rounded">
+            <p className="text-sm text-blue-600">
+              Current Network: <span className="font-medium">{network}</span>
+            </p>
+            <div className="mt-2 space-x-2">
+              <button
+                onClick={() => switchNetwork("0x89")}
+                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Polygon Mainnet
+              </button>
+              <button
+                onClick={() => switchNetwork("0x13881")}
+                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                Polygon Mumbai
+              </button>
             </div>
           </div>
 
-          <div className="pt-4 border-t">
-            <button
-              onClick={signMessage}
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              Sign Message
-            </button>
-            {signature && (
-              <div className="mt-2 p-2 bg-gray-50 rounded">
-                <p className="text-xs text-gray-600 break-all">{signature}</p>
+          {error ? (
+            <div className="p-4 bg-red-50 rounded-lg">
+              <p className="text-red-600">{error}</p>
+            </div>
+          ) : isLoading ? (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : details ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <span className="text-gray-600">Contract Address:</span>
+                  <span className="font-medium text-sm break-all">
+                    {CONTRACT_ADDRESS}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <span className="text-gray-600">Name:</span>
+                  <span className="font-medium">{details.name}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <span className="text-gray-600">Symbol:</span>
+                  <span className="font-medium">{details.symbol}</span>
+                </div>
+                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <span className="text-gray-600">Balance:</span>
+                  <span className="font-medium">{details.balance} MATIC</span>
+                </div>
               </div>
-            )}
-          </div>
+
+              <div className="pt-4 border-t">
+                <button
+                  onClick={signMessage}
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                >
+                  Sign Message
+                </button>
+                {signature && (
+                  <div className="mt-2 p-2 bg-gray-50 rounded">
+                    <p className="text-xs text-gray-600 break-all">
+                      {signature}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </>
+      )}
+
+      {!isConnected && !isLoading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600 mb-4">
+            Connect your wallet to view contract details
+          </p>
         </div>
-      ) : null}
+      )}
     </div>
   );
 };
