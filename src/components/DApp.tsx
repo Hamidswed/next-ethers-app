@@ -5,6 +5,7 @@ import abi from "../json/abi.json";
 import Button from "./common/Button";
 import NetworkInfo from "./common/NetworkInfo";
 import ContractDetails from "./common/ContractDetails";
+import WalletBalance from "./common/WalletBalance";
 
 interface ContractDetails {
   name: string;
@@ -38,6 +39,7 @@ const DApp: React.FC = () => {
   const [isClient, setIsClient] = useState<boolean>(false);
   const [signature, setSignature] = useState<string>("");
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [walletBalance, setWalletBalance] = useState<string>("");
 
   useEffect(() => {
     setIsClient(true);
@@ -47,6 +49,7 @@ const DApp: React.FC = () => {
     setDetails(null);
     setNetwork("");
     setSignature("");
+    setWalletBalance("");
     setIsConnected(false);
   };
 
@@ -97,6 +100,19 @@ const DApp: React.FC = () => {
     }
   };
 
+  const getWalletBalance = async (
+    provider: ethers.BrowserProvider,
+    address: string
+  ) => {
+    try {
+      const balance = await provider.getBalance(address);
+      return ethers.formatEther(balance);
+    } catch (err) {
+      console.error("Error getting wallet balance:", err);
+      return "0";
+    }
+  };
+
   const connectWallet = async () => {
     try {
       setIsLoading(true);
@@ -113,6 +129,7 @@ const DApp: React.FC = () => {
 
       const provider = new ethers.BrowserProvider(windowWithEthereum.ethereum);
       const signer = await provider.getSigner();
+      const address = await signer.getAddress();
 
       const networkInfo = await provider.getNetwork();
       setNetwork(networkInfo.name);
@@ -127,19 +144,20 @@ const DApp: React.FC = () => {
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
 
-      const [name, symbol, address] = await Promise.all([
+      const [name, symbol, contractBalance] = await Promise.all([
         contract.name(),
         contract.symbol(),
-        signer.getAddress(),
+        contract.balanceOf(address),
       ]);
 
-      const balance = await contract.balanceOf(address);
+      const walletBalance = await getWalletBalance(provider, address);
 
       setDetails({
         name,
         symbol,
-        balance: ethers.formatEther(balance),
+        balance: ethers.formatEther(contractBalance),
       });
+      setWalletBalance(walletBalance);
       setIsConnected(true);
     } catch (err) {
       console.error("Error connecting to wallet:", err);
@@ -159,7 +177,7 @@ const DApp: React.FC = () => {
 
   if (!isClient) {
     return (
-      <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
+      <div className="p-4 sm:p-6 w-full max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
         <div className="flex items-center justify-center p-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
         </div>
@@ -168,9 +186,9 @@ const DApp: React.FC = () => {
   }
 
   return (
-    <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
-      <div className="flex flex-col gap-4 justify-between items-center">
-        <h1 className="text-xl font-bold text-gray-800">
+    <div className="p-4 sm:p-6 w-full max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-800 text-center sm:text-left">
           Smart Contract Details
         </h1>
         {isConnected ? (
@@ -190,12 +208,13 @@ const DApp: React.FC = () => {
       </div>
 
       {isConnected && (
-        <>
+        <div className="space-y-4">
           <NetworkInfo network={network} onSwitchNetwork={switchNetwork} />
+          <WalletBalance balance={walletBalance} />
 
           {error ? (
-            <div className="p-4 bg-red-50 rounded-lg">
-              <p className="text-red-600">{error}</p>
+            <div className="p-3 sm:p-4 bg-red-50 rounded-lg">
+              <p className="text-sm sm:text-base text-red-600">{error}</p>
             </div>
           ) : isLoading ? (
             <div className="flex items-center justify-center p-4">
@@ -211,12 +230,12 @@ const DApp: React.FC = () => {
               signature={signature}
             />
           ) : null}
-        </>
+        </div>
       )}
 
       {!isConnected && !isLoading && (
-        <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">
+        <div className="text-center py-6 sm:py-8">
+          <p className="text-sm sm:text-base text-gray-600 mb-4">
             Connect your wallet to view contract details
           </p>
         </div>

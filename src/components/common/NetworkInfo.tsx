@@ -11,15 +11,16 @@ const NetworkInfo: React.FC<NetworkInfoProps> = ({
   onSwitchNetwork,
 }) => {
   return (
-    <div className="p-2 bg-blue-50 rounded">
-      <p className="text-sm text-blue-600">
+    <div className="p-2 sm:p-3 bg-blue-50 rounded">
+      <p className="text-xs sm:text-sm text-blue-600">
         Current Network: <span className="font-medium">{network}</span>
       </p>
-      <div className="mt-2 space-x-2">
+      <div className="mt-2 flex flex-wrap gap-2">
         <Button
           variant="primary"
           size="sm"
           onClick={() => onSwitchNetwork("0x89")}
+          className="flex-1 sm:flex-none"
         >
           Polygon Mainnet
         </Button>
@@ -27,6 +28,7 @@ const NetworkInfo: React.FC<NetworkInfoProps> = ({
           variant="primary"
           size="sm"
           onClick={() => onSwitchNetwork("0x13881")}
+          className="flex-1 sm:flex-none"
         >
           Polygon Mumbai
         </Button>
