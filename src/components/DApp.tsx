@@ -1,7 +1,10 @@
 "use client";
 import { ethers } from "ethers";
 import React, { useEffect, useState } from "react";
-import abi from "../json/abi.json"; // ABI of your contract
+import abi from "../json/abi.json";
+import Button from "./common/Button";
+import NetworkInfo from "./common/NetworkInfo";
+import ContractDetails from "./common/ContractDetails";
 
 interface ContractDetails {
   name: string;
@@ -13,7 +16,7 @@ interface WindowWithEthereum extends Window {
   ethereum?: ethers.Eip1193Provider;
 }
 
-const CONTRACT_ADDRESS = "0x7FFB3d637014488b63fb9858E279385685AFc1e2"; // Address of your contract
+const CONTRACT_ADDRESS = "0x7FFB3d637014488b63fb9858E279385685AFc1e2";
 
 const POLYGON_MAINNET = {
   chainId: "0x89",
@@ -29,7 +32,7 @@ const POLYGON_MAINNET = {
 
 const DApp: React.FC = () => {
   const [details, setDetails] = useState<ContractDetails | null>(null);
-  const [error, setError] = useState<string | null>(null); // For managing errors
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [network, setNetwork] = useState<string>("");
   const [isClient, setIsClient] = useState<boolean>(false);
@@ -104,7 +107,6 @@ const DApp: React.FC = () => {
         throw new Error("Please install MetaMask");
       }
 
-      // Request account access
       await windowWithEthereum.ethereum.request({
         method: "eth_requestAccounts",
       });
@@ -112,12 +114,10 @@ const DApp: React.FC = () => {
       const provider = new ethers.BrowserProvider(windowWithEthereum.ethereum);
       const signer = await provider.getSigner();
 
-      // Get network information
       const networkInfo = await provider.getNetwork();
       setNetwork(networkInfo.name);
       console.log("Connected to network:", networkInfo);
 
-      // Check if contract exists at the address
       const code = await provider.getCode(CONTRACT_ADDRESS);
       if (code === "0x") {
         throw new Error(
@@ -127,7 +127,6 @@ const DApp: React.FC = () => {
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
 
-      // Get contract details
       const [name, symbol, address] = await Promise.all([
         contract.name(),
         contract.symbol(),
@@ -139,7 +138,7 @@ const DApp: React.FC = () => {
       setDetails({
         name,
         symbol,
-        balance: ethers.formatEther(balance), // Convert balance to ETH
+        balance: ethers.formatEther(balance),
       });
       setIsConnected(true);
     } catch (err) {
@@ -170,48 +169,29 @@ const DApp: React.FC = () => {
 
   return (
     <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-md space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 justify-between items-center">
         <h1 className="text-xl font-bold text-gray-800">
           Smart Contract Details
         </h1>
         {isConnected ? (
-          <button
-            onClick={disconnectWallet}
-            className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-          >
+          <Button variant="danger" size="sm" onClick={disconnectWallet}>
             Disconnect
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
+            variant="success"
+            size="sm"
             onClick={connectWallet}
-            className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+            isLoading={isLoading}
           >
             Connect Wallet
-          </button>
+          </Button>
         )}
       </div>
 
       {isConnected && (
         <>
-          <div className="p-2 bg-blue-50 rounded">
-            <p className="text-sm text-blue-600">
-              Current Network: <span className="font-medium">{network}</span>
-            </p>
-            <div className="mt-2 space-x-2">
-              <button
-                onClick={() => switchNetwork("0x89")}
-                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                Polygon Mainnet
-              </button>
-              <button
-                onClick={() => switchNetwork("0x13881")}
-                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                Polygon Mumbai
-              </button>
-            </div>
-          </div>
+          <NetworkInfo network={network} onSwitchNetwork={switchNetwork} />
 
           {error ? (
             <div className="p-4 bg-red-50 rounded-lg">
@@ -222,44 +202,14 @@ const DApp: React.FC = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
             </div>
           ) : details ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span className="text-gray-600">Contract Address:</span>
-                  <span className="font-medium text-sm break-all">
-                    {CONTRACT_ADDRESS}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span className="text-gray-600">Name:</span>
-                  <span className="font-medium">{details.name}</span>
-                </div>
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span className="text-gray-600">Symbol:</span>
-                  <span className="font-medium">{details.symbol}</span>
-                </div>
-                <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                  <span className="text-gray-600">Balance:</span>
-                  <span className="font-medium">{details.balance} MATIC</span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t">
-                <button
-                  onClick={signMessage}
-                  className="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                >
-                  Sign Message
-                </button>
-                {signature && (
-                  <div className="mt-2 p-2 bg-gray-50 rounded">
-                    <p className="text-xs text-gray-600 break-all">
-                      {signature}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ContractDetails
+              contractAddress={CONTRACT_ADDRESS}
+              name={details.name}
+              symbol={details.symbol}
+              balance={details.balance}
+              onSignMessage={signMessage}
+              signature={signature}
+            />
           ) : null}
         </>
       )}
